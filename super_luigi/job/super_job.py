@@ -31,7 +31,7 @@ class SuperJobTask(JobTask):
         for param_name, param_obj in params:
             if isinstance(param_obj, SuperParameter):
                 if param_name not in kwargs:
-                    kwargs[param_name] = param_obj.default()
+                    kwargs[param_name] = param_obj.default
 
         print kwargs
 
