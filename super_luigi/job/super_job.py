@@ -12,6 +12,8 @@ from super_luigi.tasks import HadoopExternalData, LocalExternalData
 
 import sys
 
+from operator import *
+
 
 class SuperJobTask(JobTask):
 
