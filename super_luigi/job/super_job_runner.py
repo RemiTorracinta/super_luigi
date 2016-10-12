@@ -59,8 +59,18 @@ class SuperHadoopJobRunner(luigi.contrib.hadoop.DefaultHadoopJobRunner):
 
         # replace output with a temporary work directory
         output_final = job.output().path
-        output_tmp_fn = output_final + '-temp-' + datetime.datetime.now().isoformat().replace(':', '-')
-        tmp_target = luigi.contrib.hdfs.HdfsTarget(output_tmp_fn, is_tmp=True)
+        # atomic output: replace output with a temporary work directory
+        if self.end_job_with_atomic_move_dir:
+            illegal_targets = (
+                luigi.s3.S3FlagTarget, luigi.contrib.gcs.GCSFlagTarget)
+            if isinstance(job.output(), illegal_targets):
+                raise TypeError("end_job_with_atomic_move_dir is not supported"
+                                " for {}".format(illegal_targets))
+            output_hadoop = '{output}-temp-{time}'.format(
+                output=output_final,
+                time=datetime.datetime.now().isoformat().replace(':', '-'))
+        else:
+            output_hadoop = output_final
 
         arglist = luigi.contrib.hdfs.load_hadoop_cmd() + ['jar', self.streaming_jar]
 
@@ -74,8 +84,15 @@ class SuperHadoopJobRunner(luigi.contrib.hadoop.DefaultHadoopJobRunner):
         if libjars:
             arglist += ['-libjars', ','.join(libjars)]
 
+
+
+        # 'archives' is also a generic option
+        if self.archives:
+            arglist += ['-archives', ','.join(self.archives)]
+
         # Add static files and directories
-        #extra_files = get_extra_files(job.extra_files())
+        # extra_files = get_extra_files(job.extra_files())
+
 
         extra_files = job.extra_files()
 
@@ -117,8 +134,12 @@ class SuperHadoopJobRunner(luigi.contrib.hadoop.DefaultHadoopJobRunner):
             arglist += ['-combiner', cmb_cmd]
         if job.reducer != NotImplemented:
             arglist += ['-reducer', red_cmd]
-        files = [runner_path, self.tmp_dir + '/packages.tar', self.tmp_dir + '/job-instance.pickle']
-
+        packages_fn = 'mrrunner.pex' if job.package_binary is not None else 'packages.tar'
+        files = [
+            runner_path if job.package_binary is None else None,
+            os.path.join(self.tmp_dir, packages_fn),
+            os.path.join(self.tmp_dir, 'job-instance.pickle'),
+        ]
         for f in files:
             arglist += ['-file', f]
 
@@ -127,13 +148,24 @@ class SuperHadoopJobRunner(luigi.contrib.hadoop.DefaultHadoopJobRunner):
         if self.input_format:
             arglist += ['-inputformat', self.input_format]
 
+        allowed_input_targets = (
+            luigi.contrib.hdfs.HdfsTarget,
+            luigi.s3.S3Target,
+            luigi.contrib.gcs.GCSTarget)
         for target in luigi.task.flatten(job.input_hadoop()):
-            if isinstance(target, luigi.hdfs.HdfsTarget):
-                arglist += ['-input', target.path]
+            if not isinstance(target, allowed_input_targets):
+                raise TypeError('target must one of: {}'.format(
+                    allowed_input_targets))
+            arglist += ['-input', target.path]
 
-        assert isinstance(job.output(), luigi.hdfs.HdfsTarget)
-        arglist += ['-output', output_tmp_fn]
-
+        allowed_output_targets = (
+            luigi.contrib.hdfs.HdfsTarget,
+            luigi.s3.S3FlagTarget,
+            luigi.contrib.gcs.GCSFlagTarget)
+        if not isinstance(job.output(), allowed_output_targets):
+            raise TypeError('output must be one of: {}'.format(
+                allowed_output_targets))
+        arglist += ['-output', output_hadoop]
 
         for key, value in self.options.iteritems():
             arglist += ["-" + key, value ]
@@ -147,6 +179,13 @@ class SuperHadoopJobRunner(luigi.contrib.hadoop.DefaultHadoopJobRunner):
             arglist += ['-jobconf', conf]
 
         # submit job
+        if job.package_binary is not None:
+            shutil.copy(job.package_binary, os.path.join(self.tmp_dir, 'mrrunner.pex'))
+        else:
+            create_packages_archive(packages, os.path.join(self.tmp_dir, 'packages.tar'))
+
+
+        # submit job
         create_packages_archive(packages, self.tmp_dir + '/packages.tar')
 
         job.dump(self.tmp_dir)
@@ -155,15 +194,7 @@ class SuperHadoopJobRunner(luigi.contrib.hadoop.DefaultHadoopJobRunner):
 
         run_and_track_hadoop_job(arglist, tracking_url_callback=tracking_url_callback)
 
-        # rename temporary work directory to given output
-        tmp_target.move(output_final, fail_if_exists=True)
-        self.finish()
+        if self.end_job_with_atomic_move_dir:
+            luigi.contrib.hdfs.HdfsTarget(output_hadoop).move_dir(output_final)
 
-    def finish(self):
-        # FIXME: check for isdir?
-        if self.tmp_dir and os.path.exists(self.tmp_dir):
-            logger.debug('Removing directory %s', self.tmp_dir)
-            shutil.rmtree(self.tmp_dir)
-
-    def __del__(self):
         self.finish()
