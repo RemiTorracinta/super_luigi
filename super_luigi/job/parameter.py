@@ -7,11 +7,10 @@ from luigi.parameter import *
 class SuperParameter(Parameter):
     counter = 0
 
-    def __init__(self, is_boolean=False,  description=None,
+    def __init__(self, description=None,
                  default_config = None):
 
-        super(SuperParameter, self).__init__(is_boolean = is_boolean,
-                                             description = description)
+        super(SuperParameter, self).__init__(description = description)
         self.value = None
 
         if not default_config:
