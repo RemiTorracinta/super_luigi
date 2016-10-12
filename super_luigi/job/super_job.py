@@ -7,7 +7,7 @@ from luigi.contrib.hadoop import *
 
 from luigi.parameter import BoolParameter
 from super_luigi.job.super_job_runner import SuperHadoopJobRunner
-from super_luigi.protocol.simple_protocol import RawProtocol
+from super_luigi.protocol.simple_protocol import RawValueProtocol
 from super_luigi.tasks import HadoopExternalData, LocalExternalData
 
 import sys
@@ -17,9 +17,9 @@ class SuperJobTask(JobTask):
 
     local = BoolParameter(default = False)
 
-    INPUT_PROTOCOL = RawProtocol
-    INTERNAL_PROTOCOL = RawProtocol
-    OUTPUT_PROTOCOL = RawProtocol
+    INPUT_PROTOCOL = RawValueProtocol
+    INTERNAL_PROTOCOL = RawValueProtocol
+    OUTPUT_PROTOCOL = RawValueProtocol
 
     def __init__(self, *args, **kwargs):
 
