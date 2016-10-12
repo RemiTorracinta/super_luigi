@@ -1,21 +1,21 @@
 __author__ = 'sun'
 
 
-import luigi
-import luigi.hdfs
-from luigi.hadoop import *
+from luigi import *
+from luigi.contrib.hdfs import  *
+from luigi.contrib.hadoop import *
 
-from luigi.parameter import BooleanParameter
-from luigi.extend.job.super_job_runner import SuperHadoopJobRunner
-from luigi.extend.protocol.simple_protocol import RawProtocol
-from luigi.extend.tasks import HadoopExternalData, LocalExternalData
+from luigi.parameter import BoolParameter
+from super_luigi.job.super_job_runner import SuperHadoopJobRunner
+from super_luigi.protocol.simple_protocol import RawProtocol
+from super_luigi.tasks import HadoopExternalData, LocalExternalData
 
 import sys
 
 
 class SuperJobTask(JobTask):
 
-    local = BooleanParameter(default = False)
+    local = BoolParameter(default = False)
 
     INPUT_PROTOCOL = RawProtocol
     INTERNAL_PROTOCOL = RawProtocol
@@ -53,10 +53,10 @@ class SuperJobTask(JobTask):
 
         if self.local:
 
-            return luigi.LocalTarget(output_path)
+            return LocalTarget(output_path)
         else:
 
-            return luigi.hdfs.HdfsTarget(output_path)
+            return HdfsTarget(output_path)
 
     def _input(self, input_path):
 
@@ -164,7 +164,7 @@ class SuperJobTask(JobTask):
         if self.local:
             return LocalJobRunner()
         else:
-            return SuperHadoopJobRunner(self.options)
+            return DefaultHadoopJobRunner(self.options)
 
 
     def extra_archives(self):

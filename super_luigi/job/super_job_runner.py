@@ -1,13 +1,12 @@
 __author__ = 'sun'
 
 
-from luigi.hadoop import *
+from luigi.contrib.hadoop import *
 
 
 class SuperHadoopJobRunner(DefaultHadoopJobRunner):
     ''' Takes care of uploading & executing a Hadoop job using Hadoop streaming
 
-    TODO: add code to support Elastic Mapreduce (using boto) and local execution.
     '''
     def __init__(self, options):
 
@@ -17,7 +16,7 @@ class SuperHadoopJobRunner(DefaultHadoopJobRunner):
         self.options = options
 
 
-    def run_job(self, job):
+    def run_job(self, job, tracking_url_callback=None):
 
 
         packages = [luigi] + self.modules + job.extra_modules() #+ list(_attached_packages)

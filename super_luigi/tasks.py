@@ -2,8 +2,8 @@ __author__ = 'Sun'
 
 import subprocess
 
-import luigi.hdfs
-from luigi.extend.job.parameter import *
+from  luigi.contrib.hdfs import *
+from super_luigi.job.parameter import *
 
 
 class HadoopExternalData(luigi.ExternalTask):
@@ -11,7 +11,7 @@ class HadoopExternalData(luigi.ExternalTask):
     data_path = SuperParameter()
 
     def output(self):
-        return luigi.hdfs.HdfsTarget(self.data_path)
+        return HdfsTarget(self.data_path)
 
 
 class LocalExternalData(luigi.ExternalTask):
@@ -66,7 +66,7 @@ class DistcpTask(luigi.Task):
 
 
 
-from luigi.extend.path import get_hadoop_files
+from super_luigi.path import get_hadoop_files
 
 class LinkDataTask(luigi.Task):
     src_path = SuperParameter()
