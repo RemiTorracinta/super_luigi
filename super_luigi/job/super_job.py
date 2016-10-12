@@ -24,14 +24,20 @@ class SuperJobTask(JobTask):
     INTERNAL_PROTOCOL = RawValueProtocol
     OUTPUT_PROTOCOL = RawValueProtocol
 
-    def __init__(self, *args, **kwargs):
 
-        params = self.get_params()
+    @classmethod
+    def get_param_values(cls, params, args, kwargs):
 
         for param_name, param_obj in params:
             if isinstance(param_obj, SuperParameter):
                 if param_name not in kwargs:
                     kwargs[param_name] = param_obj.default()
+
+        print kwargs
+
+    def __init__(self, *args, **kwargs):
+
+
 
         super(SuperJobTask, self).__init__(*args, **kwargs)
 
