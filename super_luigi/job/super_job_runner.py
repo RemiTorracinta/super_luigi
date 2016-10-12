@@ -146,11 +146,11 @@ class SuperHadoopJobRunner(DefaultHadoopJobRunner):
         # submit job
         create_packages_archive(packages, self.tmp_dir + '/packages.tar')
 
-        job._dump(self.tmp_dir)
+        job.dump(self.tmp_dir)
 
         print >> sys.stderr, arglist
 
-        run_and_track_hadoop_job(arglist)
+        run_and_track_hadoop_job(arglist, tracking_url_callback=tracking_url_callback)
 
         # rename temporary work directory to given output
         tmp_target.move(output_final, fail_if_exists=True)
