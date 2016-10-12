@@ -164,7 +164,7 @@ class SuperJobTask(JobTask):
         if self.local:
             return LocalJobRunner()
         else:
-            return DefaultHadoopJobRunner(self.options)
+            return SuperHadoopJobRunner(self.options)
 
 
     def extra_archives(self):

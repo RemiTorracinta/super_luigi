@@ -46,7 +46,7 @@ class SuperHadoopJobRunner(DefaultHadoopJobRunner):
 
         # build arguments
         config = configuration.get_config()
-        python_executable = "Jumbo/Jumbo/bin/python.sh" # config.get('hadoop', 'python-executable', 'python')
+        python_executable = config.get('hadoop', 'python-executable', 'python')
         if job.mapper == NotImplemented:
             map_cmd = '\"cat\"'
         else:
@@ -98,9 +98,9 @@ class SuperHadoopJobRunner(DefaultHadoopJobRunner):
         # Add static archives
         extra_archives = list(job.extra_archives())
 
-        jumbo_archive = config.get('hadoop', 'jumbo-archive')
+#        jumbo_archive = config.get('hadoop', 'jumbo-archive')
 
-        extra_archives.append(jumbo_archive + "#Jumbo")
+#        extra_archives.append(jumbo_archive + "#Jumbo")
 
         for archive in extra_archives:
             arglist += ['-cacheArchive',  archive]
