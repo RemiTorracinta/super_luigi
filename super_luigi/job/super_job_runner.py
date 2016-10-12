@@ -1,10 +1,13 @@
 __author__ = 'sun'
 
+from luigi import *
+import luigi.contrib
+import luigi.contrib.hadoop
+import luigi.contrib.hdfs
 
 from luigi.contrib.hadoop import *
 
-
-class SuperHadoopJobRunner(DefaultHadoopJobRunner):
+class SuperHadoopJobRunner(luigi.contrib.hadoop.DefaultHadoopJobRunner):
     ''' Takes care of uploading & executing a Hadoop job using Hadoop streaming
 
     '''
@@ -57,9 +60,9 @@ class SuperHadoopJobRunner(DefaultHadoopJobRunner):
         # replace output with a temporary work directory
         output_final = job.output().path
         output_tmp_fn = output_final + '-temp-' + datetime.datetime.now().isoformat().replace(':', '-')
-        tmp_target = luigi.hdfs.HdfsTarget(output_tmp_fn, is_tmp=True)
+        tmp_target = luigi.contrib.hdfs.HdfsTarget(output_tmp_fn, is_tmp=True)
 
-        arglist = [luigi.hdfs.load_hadoop_cmd(), 'jar', self.streaming_jar]
+        arglist = luigi.contrib.hdfs.load_hadoop_cmd() + ['jar', self.streaming_jar]
 
         # 'libjars' is a generic option, so place it first
         libjars = [libjar for libjar in self.libjars]
