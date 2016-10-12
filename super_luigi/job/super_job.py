@@ -9,6 +9,7 @@ from luigi.parameter import BoolParameter
 from super_luigi.job.super_job_runner import SuperHadoopJobRunner
 from super_luigi.protocol.simple_protocol import RawValueProtocol
 from super_luigi.tasks import HadoopExternalData, LocalExternalData
+from super_luigi.job.parameter import SuperParameter
 
 import sys
 
@@ -24,6 +25,13 @@ class SuperJobTask(JobTask):
     OUTPUT_PROTOCOL = RawValueProtocol
 
     def __init__(self, *args, **kwargs):
+
+        params = self.get_params()
+
+        for param_name, param_obj in params:
+            if isinstance(param_obj, SuperParameter):
+                if param_name not in kwargs:
+                    kwargs[param_name] = param_obj.default()
 
         super(SuperJobTask, self).__init__(*args, **kwargs)
 
