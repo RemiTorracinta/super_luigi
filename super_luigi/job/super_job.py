@@ -33,7 +33,7 @@ class SuperJobTask(JobTask):
                 if param_name not in kwargs:
                     kwargs[param_name] = param_obj.default
 
-        print kwargs
+        return JobTask.get_param_values(params,args, kwargs)
 
     def __init__(self, *args, **kwargs):
 
